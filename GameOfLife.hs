@@ -56,8 +56,7 @@ getAliveNeighborCount grid coord = length aliveNeighbors
 		neighbors = getNeighborStates grid coord
 
 isCellAlive :: CellState -> Bool
-isCellAlive Alive = True
-isCellAlive Dead = False
+isCellAlive cell = (cell == Alive)
 
 nextCellState :: Grid -> Coord -> CellState
 nextCellState grid coord
