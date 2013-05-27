@@ -29,21 +29,21 @@ makeGrid rows
 		rowCount = length rows
 		areRowsValid = all (==rowCount) $ map length rows
 
-getState :: Grid -> Coord -> CellState
-getState (Grid rows _) (Coord x y) = rows !! y !! x
+getCellState :: Grid -> Coord -> CellState
+getCellState (Grid rows _) (Coord x y) = rows !! y !! x
 
-getSize :: Grid -> Int
-getSize (Grid _ size) = size
+getGridSize :: Grid -> Int
+getGridSize (Grid _ size) = size
 
 isOnGrid :: Grid -> Coord -> Bool
 isOnGrid grid (Coord x y) =
 	x >= 0 && x < gridSize && y >= 0 && y < gridSize
 	where
-		gridSize = getSize grid
+		gridSize = getGridSize grid
 
-getNeighbors :: Grid -> Coord -> [CellState]
-getNeighbors grid (Coord x y) =
-	[getState grid (Coord nx ny)
+getNeighborStates :: Grid -> Coord -> [CellState]
+getNeighborStates grid (Coord x y) =
+	[getCellState grid (Coord nx ny)
 		| nx <- [x-1..x+1], ny <- [y-1..y+1],
 		nx /= x || ny /= y,
 		isOnGrid grid (Coord nx ny)]
@@ -52,30 +52,30 @@ getAliveNeighborCount :: Grid -> Coord -> Int
 getAliveNeighborCount grid coord = length aliveNeighbors
 	where
 		aliveNeighbors = filter isCellAlive neighbors
-		neighbors = getNeighbors grid coord
+		neighbors = getNeighborStates grid coord
 
 isCellAlive :: CellState -> Bool
 isCellAlive Alive = True
 isCellAlive Dead = False
 
-calculateNewCellState :: Grid -> Coord -> CellState
-calculateNewCellState grid coord
+nextCellState :: Grid -> Coord -> CellState
+nextCellState grid coord
 	| aliveNeighbors == 2 = Alive
 	| otherwise = Dead
 	where aliveNeighbors = getAliveNeighborCount grid coord
 
-calculateRowState :: Grid -> Int -> [CellState]
-calculateRowState grid y = 
-	[calculateNewCellState grid (Coord x y)
+nextRowState :: Grid -> Int -> [CellState]
+nextRowState grid y = 
+	[nextCellState grid (Coord x y)
 	| x <- [0..gridSize-1]]
 	where
-		gridSize = getSize grid
+		gridSize = getGridSize grid
 
-calculateNewGridState :: Grid -> Grid
-calculateNewGridState grid = (Grid newRows gridSize)
+nextGridState :: Grid -> Grid
+nextGridState grid = (Grid newRows gridSize)
 	where
-		newRows = [calculateRowState grid y | y <- [0..gridSize-1]]
-		gridSize = getSize grid
+		newRows = [nextRowState grid y | y <- [0..gridSize-1]]
+		gridSize = getGridSize grid
 
 run :: Grid -> Int -> IO()
 run grid maxIterations = runIteration grid 1
@@ -84,7 +84,7 @@ run grid maxIterations = runIteration grid 1
 			putStrLn $ (show stepNumber) ++ ">"
 			putStrLn $ show grid
 			if stepNumber < maxIterations
-				then runIteration (calculateNewGridState grid) (stepNumber + 1)
+				then runIteration (nextGridState grid) (stepNumber + 1)
 				else return ()
 
 main = do
