@@ -3,6 +3,7 @@ import Data.String.Utils
 data Coord = Coord Int Int
 
 data CellState = Alive | Dead
+	deriving (Eq)
 
 data Grid = Grid [[CellState]] Int
 
@@ -77,14 +78,20 @@ nextGridState grid = (Grid newRows gridSize)
 		newRows = [nextRowState grid y | y <- [0..gridSize-1]]
 		gridSize = getGridSize grid
 
+areGridsEqual :: Grid -> Grid -> Bool
+areGridsEqual (Grid firstRows _) (Grid secondRows _) =
+	firstRows == secondRows
+
 run :: Grid -> Int -> IO()
 run grid maxIterations = runIteration grid 1
 	where
 		runIteration grid stepNumber = do
 			putStrLn $ (show stepNumber) ++ ">"
 			putStrLn $ show grid
-			if stepNumber < maxIterations
-				then runIteration (nextGridState grid) (stepNumber + 1)
+			let nextGrid = nextGridState grid
+			let gridChanged = not $ areGridsEqual grid nextGrid
+			if stepNumber < maxIterations && gridChanged
+				then runIteration nextGrid (stepNumber + 1)
 				else return ()
 
 main = do
